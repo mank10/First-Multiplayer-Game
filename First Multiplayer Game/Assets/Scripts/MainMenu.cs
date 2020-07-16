@@ -2,20 +2,25 @@
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviourPunCallbacks
 {
     [SerializeField] private GameObject findOpponentPanel = null;
+    [SerializeField] private GameObject playerNamePanel = null;
     [SerializeField] private GameObject WaitingStatusPanel = null;
     [SerializeField] private TextMeshProUGUI WaitingStatusText = null;
+    [SerializeField] private TextMeshProUGUI PlayerNamesText = null;
+    [SerializeField] private GameObject StartButton = null;
 
+    [SerializeField] private GameObject newRoomPanel = null;
+    [SerializeField] private GameObject customRoomPanel = null;
     [SerializeField] private TMP_InputField newRoomName;
     [SerializeField] private TMP_InputField customRoomName;
 
-    //private bool isConnecting = false;
     private const string GameVesrion = "0.1"; 
 
-    private const int maxPlayerPerRoom = 2;
+    private const int maxPlayerPerRoom = 4;
 
     void Awake() 
     {
@@ -26,6 +31,7 @@ public class MainMenu : MonoBehaviourPunCallbacks
     {
         if(!PhotonNetwork.IsConnected)
         {
+            playerNamePanel.SetActive(false);
             PhotonNetwork.GameVersion = GameVesrion;
             PhotonNetwork.ConnectUsingSettings();
         }
@@ -34,8 +40,6 @@ public class MainMenu : MonoBehaviourPunCallbacks
     public void FindOpponent()
     {
         //This helps in finding random rooms.
-        //isConnecting = true;
-
         findOpponentPanel.SetActive(false);
         WaitingStatusPanel.SetActive(true);
 
@@ -47,6 +51,7 @@ public class MainMenu : MonoBehaviourPunCallbacks
     public override void OnConnectedToMaster()
     {
         Debug.Log("Connected to Master");
+        playerNamePanel.SetActive(true);
     }
 
     public void CreateCustomRoom()
@@ -58,6 +63,10 @@ public class MainMenu : MonoBehaviourPunCallbacks
         }
 
         PhotonNetwork.CreateRoom(newRoomName.text, new RoomOptions { MaxPlayers = maxPlayerPerRoom });
+
+        newRoomPanel.SetActive(false);
+        WaitingStatusPanel.SetActive(true);
+        WaitingStatusText.text = "New Room created successfully.";
     }
 
     public void JoinCustomRoom()
@@ -69,6 +78,10 @@ public class MainMenu : MonoBehaviourPunCallbacks
         }
 
         PhotonNetwork.JoinRoom(customRoomName.text);
+
+        customRoomPanel.SetActive(false);
+        WaitingStatusPanel.SetActive(true);
+        WaitingStatusText.text = "Room joined successfully.";
     }
 
     public override void OnCreateRoomFailed(short returnCode, string message)
@@ -97,28 +110,45 @@ public class MainMenu : MonoBehaviourPunCallbacks
 
         int playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
 
-        if(playerCount != maxPlayerPerRoom)
+        if(playerCount < 2) //playerCount != maxPlayerPerRoom
         {
             WaitingStatusText.text = "Waiting for opponents to join...";
+            PlayerNamesText.text += PhotonNetwork.NickName;
             Debug.Log("Waiting for opps...");
         }
         else
         {
             WaitingStatusText.text = "Opponent Found";
             Debug.Log("Match ready to begin");
+            PlayerNamesText.text += PhotonNetwork.NickName;
+            if(PhotonNetwork.MasterClient == PhotonNetwork.LocalPlayer)
+                StartButton.SetActive(true);
         }
     }
 
     public override void OnPlayerEnteredRoom(Player player)
     {
-        if(PhotonNetwork.CurrentRoom.PlayerCount == maxPlayerPerRoom)
+        
+        if(PhotonNetwork.CurrentRoom.PlayerCount >= 2)  //PhotonNetwork.CurrentRoom.PlayerCount == maxPlayerPerRoom
         {
-            PhotonNetwork.CurrentRoom.IsOpen = false;
+            //PhotonNetwork.CurrentRoom.IsOpen = false;
+            if(PhotonNetwork.CurrentRoom.PlayerCount == maxPlayerPerRoom)
+            {
+                PhotonNetwork.CurrentRoom.IsOpen = false;
+            }
 
             Debug.Log("Match ready to begin");
             WaitingStatusText.text = "Oppenent found";
+            PlayerNamesText.text += "\n" + player.NickName;
 
-            PhotonNetwork.LoadLevel("Scene_Main");
+            if (PhotonNetwork.MasterClient == PhotonNetwork.LocalPlayer)
+                StartButton.SetActive(true);
+            //PhotonNetwork.LoadLevel("Scene_Main");
         }
+    }
+
+    public void StartGame()
+    {
+        PhotonNetwork.LoadLevel("Scene_Main");
     }
 }

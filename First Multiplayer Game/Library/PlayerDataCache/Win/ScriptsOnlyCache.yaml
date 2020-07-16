@@ -5,8 +5,6 @@ ScriptsOnlyBuild:
     - PlayerMovement
     - PlayerNameInput
     - PlayerSpawner
-    PhotonUnityNetworking.Editor.dll:
-    - Photon.Pun.PunSceneSettings
     PhotonUnityNetworking.dll:
     - Photon.Pun.PhotonRigidbodyView
     - Photon.Pun.PhotonTransformView
@@ -251,7 +249,7 @@ ScriptsOnlyBuild:
     className: PlayerQuitHandler
   - hash:
       serializedVersion: 2
-      Hash: aecb3a73afc042f9d339d6b91f0ac945
+      Hash: e981d0e5491590235217a0cb49c0abfd
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: MainMenu
